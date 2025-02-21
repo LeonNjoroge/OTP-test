@@ -29,6 +29,7 @@
         });
         if (otp) {
           input.value = otp.code;
+          document.getElementById("otp").value = text.trim();
         //   await navigator.clipboard.writeText(otp.code); // Copy OTP to clipboard
           if (form) form.submit();
         }
