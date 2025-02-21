@@ -56,7 +56,7 @@ function pollClipboardForOTP({ interval = 1000, timeout = 30000, codeLength = 6 
 // Main OTP retrieval with Web OTP API
 if ('OTPCredential' in window) {
   window.addEventListener('DOMContentLoaded', () => {
-    const input = document.querySelector('input[autocomplete="one-time-code"]');
+    const input = document.querySelector('input.otp-input');
     if (!input) return;
     const ac = new AbortController();
     const form = input.closest('form');
@@ -86,7 +86,7 @@ if ('OTPCredential' in window) {
 
 // Fallback: Use the Clipboard API if user clicks the button
 document.getElementById('paste-otp').addEventListener('click', () => {
-  const input = document.querySelector('input[autocomplete="one-time-code"]');
+  const input = document.querySelector('input.otp-input');
   pollClipboardForOTP({ interval: 1000, timeout: 30000, codeLength: 6 })
     .then(code => {
       fillOTP(input, code);
