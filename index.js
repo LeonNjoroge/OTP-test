@@ -1,6 +1,6 @@
 if ('OTPCredential' in window) {
     window.addEventListener('DOMContentLoaded', e => {
-      const input = document.querySelector('input[autocomplete="one-time-code"]');
+      const input = document.querySelector('input.otp-input');
       if (!input) return;
       const ac = new AbortController();
       const form = input.closest('form');
