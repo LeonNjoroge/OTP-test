@@ -11,9 +11,10 @@
 
 
     <div class="otp-area">
-        <form>
-            <input type="text" autocomplete="one-time-code" inputmode="numeric" />
-            <input type="submit">
+        <form action="/verify-otp" method="POST">
+            <label for="otp">Enter OTP:</label>
+            <input type="text" id="otp" autocomplete="one-time-code" inputmode="numeric" required />
+            <button type="submit">Verify</button>
           </form>
 
     </div>
