@@ -12,33 +12,35 @@
 //     }
 //   }
 
-  // WebOTP API for automatic OTP fetching
-  if ("OTPCredential" in window) {
-    window.addEventListener("DOMContentLoaded", async () => {
-      const input = document.querySelector('input[autocomplete="one-time-code"]');
-      if (!input) return;
-      const ac = new AbortController();
-      const form = input.closest("form");
-      if (form) {
-        form.addEventListener("submit", () => ac.abort());
-      }
-      try {
-        const otp = await navigator.credentials.get({
-          otp: { transport: ["sms"] },
-          signal: ac.signal,
-        });
-        if (otp) {
-          input.value = otp.code;
-          document.getElementById("otp").value = text.trim();
-        //   await navigator.clipboard.writeText(otp.code); // Copy OTP to clipboard
-          if (form) form.submit();
-        }
-      } catch (err) {
-        console.error("WebOTP failed:", err);
-      }
-    });
-  }
+// WebOTP API for automatic OTP fetching
+if ("OTPCredential" in window) {
+  window.addEventListener("DOMContentLoaded", async () => {
+    const input = document.querySelector('input[autocomplete="one-time-code"]');
+    if (!input) return;
+    const ac = new AbortController();
+    const form = input.closest("form");
+    if (form) {
+      form.addEventListener("submit", () => ac.abort());
+    }
+    try {
+      const otp = await navigator.credentials.get({
+        otp: { transport: ["sms"] },
+        signal: ac.signal,
+      });
+      if (otp) {
+        input.value = otp.code;
+        await navigator.clipboard.writeText(otp.code); // Copy OTP to clipboard
+        const text = await navigator.clipboard.readText();
+        document.getElementById("otp").value = text.trim();
+        console.log("Clipboard updated with OTP:", text.trim());
 
+        if (form) form.submit();
+      }
+    } catch (err) {
+      console.error("WebOTP failed:", err);
+    }
+  });
+}
 
 //   // Clipboard Polling Function (to detect changes)
 //   let lastClipboardText = ""; // Store last clipboard content
@@ -55,8 +57,7 @@
 //     }
 //   }
 
-
-  // Start polling clipboard when page is active
+// Start polling clipboard when page is active
 //   let clipboardInterval;
 //   document.addEventListener("visibilitychange", () => {
 //     if (document.visibilityState === "visible") {
@@ -65,7 +66,6 @@
 //       clearInterval(clipboardInterval); // Stop polling when page is inactive
 //     }
 //   });
-
 
 //   // Initial start
 //   clipboardInterval = setInterval(checkClipboardChanges, 2000);
