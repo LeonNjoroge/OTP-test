@@ -1,50 +1,69 @@
-if ('OTPCredential' in window) {
-    window.addEventListener('DOMContentLoaded', () => {
-      const input = document.querySelector('input[autocomplete="one-time-code"]');
-      if (!input) return;
-  
-      const ac = new AbortController();
-      const form = input.closest('form');
-  
-      // Abort OTP retrieval when the form is submitted
-      if (form) {
-        form.addEventListener('submit', () => ac.abort());
+/**
+     * fillOTP: Sets the OTP value to the provided input element.
+     * @param {HTMLInputElement} input - The OTP input element.
+     * @param {string} code - The OTP code to fill.
+     */
+function fillOTP(input, code) {
+  input.value = code;
+  console.log('OTP code filled:', code);
+}
+
+/**
+ * pollClipboardForOTP: Returns a promise that periodically reads the clipboard
+ * until it finds an OTP (a numeric string with expected length) or times out.
+ * @param {Object} options - Options for polling.
+ * @param {number} options.interval - How frequently (ms) to poll the clipboard.
+ * @param {number} options.timeout - Total time (ms) before giving up.
+ * @param {number} options.codeLength - Expected length of the OTP.
+ * @returns {Promise<string>} - Resolves with the OTP code.
+ */
+function pollClipboardForOTP({ interval = 1000, timeout = 30000, codeLength = 6 } = {}) {
+  return new Promise((resolve, reject) => {
+    let elapsed = 0;
+    const poller = setInterval(async () => {
+      elapsed += interval;
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText();
+          const trimmed = text.trim();
+          // Very simple check: if the trimmed text is numeric and of expected length, consider it the OTP.
+          if (/^\d+$/.test(trimmed) && trimmed.length === codeLength) {
+            clearInterval(poller);
+            resolve(trimmed);
+          }
+        }
+      } catch (error) {
+        console.error('Error reading clipboard:', error);
+        // Optionally, clear the interval if there's a problem
+        clearInterval(poller);
+        reject(error);
       }
-  
-      // Call function to retrieve the OTP from the SMS
-      retrieveOTP(ac)
-        .then(code => {
-          // Once the OTP is received, pass it to the function that inputs it
-          fillOTP(input, code);
-          // Optionally, auto-submit the form:
-          if (form) form.submit();
-        })
-        .catch(err => {
-          console.error('OTP Error:', err);
-        });
-    });
-  }
-  
-  /**
-   * Retrieves the OTP using the Web OTP API.
-   * @param {AbortController} ac - The AbortController to cancel the request if needed.
-   * @returns {Promise<string>} - Resolves with the OTP code.
-   */
-  function retrieveOTP(ac) {
-    return navigator.credentials.get({
-      otp: { transport: ['sms'] },
-      signal: ac.signal
+      if (elapsed >= timeout) {
+        clearInterval(poller);
+        reject(new Error('OTP not found in clipboard within timeout'));
+      }
+    }, interval);
+  });
+}
+
+// Attach event listener to the button to start polling.
+document.getElementById('start-clipboard').addEventListener('click', () => {
+  const otpInput = document.querySelector('input[autocomplete="one-time-code"]');
+  // Start polling the clipboard
+  pollClipboardForOTP({ interval: 1000, timeout: 30000, codeLength: 6 })
+    .then(code => {
+      fillOTP(otpInput, code);
+      // Optionally, auto-submit the form:
+      const form = otpInput.closest('form');
+      if (form) form.submit();
     })
-    .then(otp => otp.code); // Return only the OTP code
-  }
-  
-  /**
-   * Fills the provided input field with the OTP code.
-   * @param {HTMLInputElement} input - The input element for the OTP.
-   * @param {string} code - The OTP code retrieved.
-   */
-  function fillOTP(input, code) {
-    input.value = code;
-    console.log('OTP code filled:', code); // Optional logging for debugging
-  }
-  
+    .catch(err => {
+      console.error(err);
+      alert('Could not retrieve OTP from clipboard.');
+    });
+});
+
+// Inform user that a click is needed.
+window.addEventListener('DOMContentLoaded', () => {
+  console.log('Page loaded. Click "Start OTP Clipboard Polling" to begin.');
+});
