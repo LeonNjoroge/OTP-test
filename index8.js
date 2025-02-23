@@ -76,6 +76,16 @@ async function clearClipboard() {
   }
   
   // Clear clipboard on page load and before unload.
-  window.addEventListener("DOMContentLoaded", clearClipboard);
+  //window.addEventListener("DOMContentLoaded", clearClipboard);
   window.addEventListener("beforeunload", clearClipboard);
   
+
+  window.addEventListener("DOMContentLoaded", () => {
+    setTimeout(() => {
+      const input = document.querySelector("input.otp-input");
+      if (input) {
+        input.focus();
+        console.log("Input focused after 2 seconds.");
+      }
+    }, 2000); // 2000 milliseconds = 2 seconds
+  });
